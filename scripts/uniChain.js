@@ -5,15 +5,14 @@ import fs from "fs";
 
 async function main() {
     // 测试网络
-    const provider = ethers.getDefaultProvider("127.0.0.1:8545");
+    //const provider = ethers.getDefaultProvider("127.0.0.1:8545");
 
     // 正式网络
-
-    //const provider = ethers.getDefaultProvider("");
+    const provider = ethers.getDefaultProvider("https://sepolia.unichain.org");
     const fileContent = fs.readFileSync("./Mnemonic.json", "utf-8");
     const json = JSON.parse(fileContent);
 
-    for (let i = 2; i < 100000; ++i) {
+    for (let i = 0; i < 100000; ++i) {
         // 获取第一个账户地址
         const walletsOne = Wallet.fromMnemonic(json.mnemonic, `m/44'/60'/0'/0/${i}`)
         // 获取第二个账户地址以转移gas
@@ -37,9 +36,10 @@ async function main() {
 
         // 获取钱包剩余Gas
         let balance = await provider.getBalance(wallet.address);
-        let gasPrcie = 300000000n; // 可调整
+        let baseFee = 350000000000n // 可调整
+        let gasPrcie = 1100000n // 可调整
         let gasLimit = 21000n; // 可调整
-        let balanceOnly = balance - BigNumber.from(gasPrcie * gasLimit)
+        let balanceOnly = balance - BigNumber.from(gasPrcie * gasLimit)-BigNumber.from(baseFee)
 
         console.log("Balance to down", balance.toString());
         console.log("Balance to up", balanceOnly.toString());
@@ -59,7 +59,7 @@ async function main() {
         console.log(await provider.waitForTransaction(tx.hash).transactionHash);
 
         // 检查上一个地址余额
-        console.log("Balance to up",await provider.getBalance(wallet.address));
+        console.log("Balance to up",(await provider.getBalance(wallet.address)).toString());
 
         // 暂停5秒，等待交易确定
         await new Promise(resolve => setTimeout(resolve, 5000));
